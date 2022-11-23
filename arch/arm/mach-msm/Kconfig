@@ -519,6 +519,13 @@ config MACH_J2Y18LTE_MEA_OPEN
         help
         Support for Samsung J2Y18LTE MEA OPEN device.
 		
+config MACH_J2Y18LTE_KOR_OPEN
+	depends on SEC_J2Y18LTE_PROJECT
+	default n
+	bool "Samsung J2Y18LTE KOR OPEN"
+	help
+	Support for Samsung J2Y18LTE KOR OPEN device.
+
 config SEC_J5Y18LTE_PROJECT
         depends on ARCH_MSM8937
         default n
