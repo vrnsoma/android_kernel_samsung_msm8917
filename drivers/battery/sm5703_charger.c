@@ -684,6 +684,12 @@ static bool sm5703_chg_init(struct sm5703_charger_data *charger)
 
 	sm5703_set_otgcurrent(charger, 1200); /* OTGCURRENT : 1.2A */
 
+#define CUSTOM_CURRENT 1500
+#ifdef CUSTOM_CURRENT
+	pr_info("%s: Current fast charge current: %d\n", __func__, sm5703_get_fast_charging_current(charger));
+	sm5703_set_fast_charging_current(charger, CUSTOM_CURRENT);
+	pr_info("%s: Now fast charge current is %d\n", __func__, CUSTOM_CURRENT);
+#endif
 	sm5703_set_bst_iq3limit(charger, SM5703_BST_IQ3LIMIT_1X);
 
 	ret = sm5703_reg_read(charger->i2c, SM5703_STATUS3);
