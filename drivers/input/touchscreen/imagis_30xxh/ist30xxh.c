@@ -632,6 +632,10 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
     u32 *z_values = (u32 *)data->z_values;
     int idx = 0;
     u32 status;
+#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+    static long current_time, before_time;
+    struct timespec ts;
+#endif /* TOUCHSCREEN_IST30XXH_DT2W_SUPPORT */
 
     memset(data->t_frame, 0, sizeof(data->t_frame));
 
@@ -646,7 +650,27 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
         }
         input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, press);
 
-        print_tsp_event(data, id, &fingers[idx]);
+#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+	getnstimeofday(&ts);
+	current_time = ts.tv_nsec;
+	if (data->double_tap_to_wake) {
+		data->scrub_id = SPONGE_EVENT_TYPE_AOD_DOUBLETAB;
+		input_info(true, &client->dev, "[DT2W] Tab detect\n");
+		long diff;
+		diff = current_time - before_time;
+		if (TOUCHSCREEN_IST30XXH_DT2W_MIN_TIME <= diff 
+				&& diff <= TOUCHSCREEN_IST30XXH_DT2W_MAX_TIME) {
+			input_info(true, &client->dev, "[DT2W] Double tap detect\n");
+			input_report_key(info->input_dev, KEY_WAKEUP, 1);
+			input_sync(info->input_dev);
+			input_report_key(info->input_dev, KEY_WAKEUP, 0);
+			input_sync(info->input_dev);
+		}		
+	}
+	before_time = current_time;
+#endif /* TOUCHSCREEN_IST30XXH_DT2W_SUPPORT */
+
+	print_tsp_event(data, id, &fingers[idx]);
 
         if (press == false)
             continue;

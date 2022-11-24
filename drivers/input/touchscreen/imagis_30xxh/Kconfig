@@ -22,3 +22,6 @@ config TOUCHSCREEN_IMAGIS_LPM_NO_RESET
 	help
 	  Say Y here if you use
 	  LPM No Reset Sequence.
+
+# DT2W support
+source "drivers/input/touchscreen/imagis_30xxh/Kconfig.dt2w"

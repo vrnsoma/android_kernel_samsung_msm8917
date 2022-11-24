@@ -3702,6 +3702,25 @@ static ssize_t touchkey_threshold_show(struct device *dev,
     return sprintf(buf, "%d", threshold);
 }
 #endif /* IST30XX_USE_KEY */
+#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+static void set_dt2w_support(void *dev_data)
+{
+	struct ist30xx_data *data = (struct ist30xx_data *)dev_data;
+	struct sec_factory *sec = (struct sec_factory *)&data->sec;
+	char buf[16] = { 0 };
+
+	set_default_result(sec);
+	data->double_tap_to_wake = sec->cmd_param[0];
+
+        snprintf(buf, sizeof(buf), "%s", "OK");
+	set_cmd_result(sec, buf, strnlen(buf, sizeof(buf)));
+	
+	mutex_lock(&sec->cmd_lock);
+	sec->cmd_is_running = false;
+	mutex_unlock(&sec->cmd_lock);
+	sec->cmd_state = CMD_STATE_WAITING;
+}
+#endif
 
 struct tsp_cmd tsp_cmds[] = {
     { TSP_CMD("get_chip_vendor", get_chip_vendor), },
@@ -3781,6 +3800,9 @@ struct tsp_cmd tsp_cmds[] = {
     { TSP_CMD("get_wet_mode", get_wet_mode),},
     { TSP_CMD("run_fw_integrity", run_fw_integrity),},
     { TSP_CMD("get_fw_integrity", get_checksum_data),},
+#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+    { TSP_CMD("double_tap", set_dt2w_support),},
+#endif
     { TSP_CMD("not_support_cmd", not_support_cmd), },
 };
 
