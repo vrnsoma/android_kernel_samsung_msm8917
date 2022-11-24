@@ -42,11 +42,14 @@
 static struct v4l2_file_operations msm_eeprom_v4l2_subdev_fops;
 #endif
 
+#define OTP_SENSOR_ID_SIZE 0x0010
+#define OTP_MODULE_ID_SIZE OTP_SENSOR_ID_SIZE
+
 #if defined(CONFIG_GET_FRONT_MODULE_ID_OTP)
-extern uint8_t front_module_id[S5K5E9_OTP_MODULE_ID_SIZE + 1];
+extern uint8_t front_module_id[OTP_MODULE_ID_SIZE + 1];
 #endif
 #if defined(CONFIG_GET_FRONT_SENSOR_ID)
-extern uint8_t front_sensor_id[S5K5E9_OTP_SENSOR_ID_SIZE + 1];
+extern uint8_t front_sensor_id[OTP_SENSOR_ID_SIZE + 1];
 #endif
 
 uint8_t *map_data = NULL;
