@@ -726,7 +726,7 @@ struct ist30xx_data {
     unsigned int scrub_x;
     unsigned int scrub_y;
 
-#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
     bool double_tap_to_wake;
 #endif
 };

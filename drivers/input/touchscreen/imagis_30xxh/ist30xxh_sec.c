@@ -3702,7 +3702,7 @@ static ssize_t touchkey_threshold_show(struct device *dev,
     return sprintf(buf, "%d", threshold);
 }
 #endif /* IST30XX_USE_KEY */
-#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
 static void set_dt2w_support(void *dev_data)
 {
 	struct ist30xx_data *data = (struct ist30xx_data *)dev_data;
@@ -3800,7 +3800,7 @@ struct tsp_cmd tsp_cmds[] = {
     { TSP_CMD("get_wet_mode", get_wet_mode),},
     { TSP_CMD("run_fw_integrity", run_fw_integrity),},
     { TSP_CMD("get_fw_integrity", get_checksum_data),},
-#ifdef TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
+#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
     { TSP_CMD("double_tap", set_dt2w_support),},
 #endif
     { TSP_CMD("not_support_cmd", not_support_cmd), },
