@@ -238,12 +238,12 @@ static inline struct dentry *file_dentry(const struct file *file)
 {
 	return file->f_path.dentry;
 }
-
+#if 0
 static inline void inode_nohighmem(struct inode *inode)
 {
 	mapping_set_gfp_mask(inode->i_mapping, GFP_USER);
 }
-
+#endif
 /**
  * current_time - Return FS time
  * @inode: inode.
