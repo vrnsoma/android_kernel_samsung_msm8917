@@ -18,6 +18,7 @@
 
 #include "f2fs.h"
 #include "node.h"
+#include "segment.h"
 #include "xattr.h"
 #include "acl.h"
 #include <trace/events/f2fs.h>
@@ -62,17 +63,13 @@ static struct inode *f2fs_new_inode(struct inode *dir, umode_t mode)
 		goto fail;
 	}
 
-	if (f2fs_sb_has_project_quota(sbi->sb) &&
+	if (f2fs_sb_has_project_quota(sbi) &&
 		(F2FS_I(dir)->i_flags & F2FS_PROJINHERIT_FL))
 		F2FS_I(inode)->i_projid = F2FS_I(dir)->i_projid;
 	else
 		F2FS_I(inode)->i_projid = make_kprojid(&init_user_ns,
 							F2FS_DEF_PROJID);
 	dquot_initialize(inode);
-
-	err = dquot_alloc_inode(inode);
-	if (err)
-		goto fail_drop;
 
 	set_inode_flag(inode, FI_NEW_INODE);
 
@@ -81,7 +78,7 @@ static struct inode *f2fs_new_inode(struct inode *dir, umode_t mode)
 				f2fs_may_encrypt(inode))
 		f2fs_set_encrypted_inode(inode);
 
-	if (f2fs_sb_has_extra_attr(sbi->sb)) {
+	if (f2fs_sb_has_extra_attr(sbi)) {
 		set_inode_flag(inode, FI_EXTRA_ATTR);
 		F2FS_I(inode)->i_extra_isize = F2FS_TOTAL_EXTRA_ATTR_SIZE;
 	}
@@ -94,7 +91,7 @@ static struct inode *f2fs_new_inode(struct inode *dir, umode_t mode)
 	if (f2fs_may_inline_dentry(inode))
 		set_inode_flag(inode, FI_INLINE_DENTRY);
 
-	if (f2fs_sb_has_flexible_inline_xattr(sbi->sb)) {
+	if (f2fs_sb_has_flexible_inline_xattr(sbi)) {
 		f2fs_bug_on(sbi, !f2fs_has_extra_attr(inode));
 		if (f2fs_has_inline_xattr(inode))
 			xattr_size = F2FS_OPTION(sbi).inline_xattr_size;
@@ -130,16 +127,6 @@ fail:
 	make_bad_inode(inode);
 	if (nid_free)
 		set_inode_flag(inode, FI_FREE_NID);
-	iput(inode);
-	return ERR_PTR(err);
-fail_drop:
-	trace_f2fs_new_inode(inode, err);
-	dquot_drop(inode);
-	inode->i_flags |= S_NOQUOTA;
-	if (nid_free)
-		set_inode_flag(inode, FI_FREE_NID);
-	clear_nlink(inode);
-	unlock_new_inode(inode);
 	iput(inode);
 	return ERR_PTR(err);
 }
@@ -273,6 +260,9 @@ static int f2fs_create(struct inode *dir, struct dentry *dentry, umode_t mode,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
+	err = f2fs_is_checkpoint_ready(sbi);
+	if (err)
+		return err;
 
 	dquot_initialize(dir);
 
@@ -318,6 +308,9 @@ static int f2fs_link(struct dentry *old_dentry, struct inode *dir,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
+	err = f2fs_is_checkpoint_ready(sbi);
+	if (err)
+		return err;
 
 	err = fscrypt_prepare_link(old_dentry, dir, dentry);
 	if (err)
@@ -377,9 +370,8 @@ static int __recover_dot_dentries(struct inode *dir, nid_t pino)
 	int err = 0;
 
 	if (f2fs_readonly(sbi->sb)) {
-		f2fs_msg(sbi->sb, KERN_INFO,
-			"skip recovering inline_dots inode (ino:%lu, pino:%u) "
-			"in readonly mountpoint", dir->i_ino, pino);
+		f2fs_info(sbi, "skip recovering inline_dots inode (ino:%lu, pino:%u) in readonly mountpoint",
+			  dir->i_ino, pino);
 		return 0;
 	}
 
@@ -470,9 +462,8 @@ static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry,
 	if (f2fs_encrypted_inode(dir) &&
 	    (S_ISDIR(inode->i_mode) || S_ISLNK(inode->i_mode)) &&
 	    !fscrypt_has_permitted_context(dir, inode)) {
-		f2fs_msg(inode->i_sb, KERN_WARNING,
-			 "Inconsistent encryption contexts: %lu/%lu",
-			 dir->i_ino, inode->i_ino);
+		f2fs_warn(F2FS_I_SB(inode), "Inconsistent encryption contexts: %lu/%lu",
+			  dir->i_ino, inode->i_ino);
 		err = -EPERM;
 		goto out_iput;
 	}
@@ -564,6 +555,9 @@ static int f2fs_symlink(struct inode *dir, struct dentry *dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
+	err = f2fs_is_checkpoint_ready(sbi);
+	if (err)
+		return err;
 
 	err = fscrypt_prepare_symlink(dir, symname, len, dir->i_sb->s_blocksize,
 				      &disk_link);
@@ -626,7 +620,7 @@ out_f2fs_handle_failed_inode:
 	f2fs_handle_failed_inode(inode);
 out_free_encrypted_link:
 	if (disk_link.name != (unsigned char *)symname)
-		kfree(disk_link.name);
+		kvfree(disk_link.name);
 	return err;
 }
 
@@ -693,6 +687,9 @@ static int f2fs_mknod(struct inode *dir, struct dentry *dentry,
 		return -EIO;
 	if (!new_valid_dev(rdev))
 		return -EINVAL;
+	err = f2fs_is_checkpoint_ready(sbi);
+	if (err)
+		return err;
 
 	dquot_initialize(dir);
 
@@ -824,6 +821,9 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
+	err = f2fs_is_checkpoint_ready(sbi);
+	if (err)
+		return err;
 
 	if (is_inode_flag_set(new_dir, FI_PROJ_INHERIT) &&
 			(!projid_eq(F2FS_I(new_dir)->i_projid,
@@ -1009,6 +1009,9 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
+	err = f2fs_is_checkpoint_ready(sbi);
+	if (err)
+		return err;
 
 	if ((is_inode_flag_set(new_dir, FI_PROJ_INHERIT) &&
 			!projid_eq(F2FS_I(new_dir)->i_projid,

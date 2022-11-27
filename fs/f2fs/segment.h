@@ -338,6 +338,12 @@ static inline unsigned int get_valid_blocks(struct f2fs_sb_info *sbi,
 		return get_seg_entry(sbi, segno)->valid_blocks;
 }
 
+static inline unsigned int get_ckpt_valid_blocks(struct f2fs_sb_info *sbi,
+				unsigned int segno)
+{
+	return get_seg_entry(sbi, segno)->ckpt_valid_blocks;
+}
+
 static inline void seg_info_from_raw_sit(struct seg_entry *se,
 					struct f2fs_sit_entry *rs)
 {
@@ -575,6 +581,15 @@ static inline bool has_not_enough_free_secs(struct f2fs_sb_info *sbi,
 		reserved_sections(sbi) + needed);
 }
 
+static inline int f2fs_is_checkpoint_ready(struct f2fs_sb_info *sbi)
+{
+	if (likely(!is_sbi_flag_set(sbi, SBI_CP_DISABLED)))
+		return 0;
+	if (likely(!has_not_enough_free_secs(sbi, 0, 0)))
+		return 0;
+	return -ENOSPC;
+}
+
 static inline bool excess_prefree_segs(struct f2fs_sb_info *sbi)
 {
 	return prefree_segments(sbi) > SM_I(sbi)->rec_prefree_segments;
@@ -677,21 +692,19 @@ static inline int check_block_count(struct f2fs_sb_info *sbi,
 	} while (cur_pos < sbi->blocks_per_seg);
 
 	if (unlikely(GET_SIT_VBLOCKS(raw_sit) != valid_blocks)) {
-		f2fs_msg(sbi->sb, KERN_ERR,
-				"Mismatch valid blocks %d vs. %d",
-					GET_SIT_VBLOCKS(raw_sit), valid_blocks);
+		f2fs_err(sbi, "Mismatch valid blocks %d vs. %d",
+			 GET_SIT_VBLOCKS(raw_sit), valid_blocks);
 		set_sbi_flag(sbi, SBI_NEED_FSCK);
-		return -EINVAL;
+		return -EFSCORRUPTED;
 	}
 
 	/* check segment usage, and check boundary of a given segment number */
 	if (unlikely(GET_SIT_VBLOCKS(raw_sit) > sbi->blocks_per_seg
 					|| segno > TOTAL_SEGS(sbi) - 1)) {
-		f2fs_msg(sbi->sb, KERN_ERR,
-				"Wrong valid blocks %d or segno %u",
-					GET_SIT_VBLOCKS(raw_sit), segno);
+		f2fs_err(sbi, "Wrong valid blocks %d or segno %u",
+			 GET_SIT_VBLOCKS(raw_sit), segno);
 		set_sbi_flag(sbi, SBI_NEED_FSCK);
-		return -EINVAL;
+		return -EFSCORRUPTED;
 	}
 	return 0;
 }

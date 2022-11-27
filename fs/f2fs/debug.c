@@ -27,7 +27,14 @@ static DEFINE_MUTEX(f2fs_stat_mutex);
 static void update_general_status(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_stat_info *si = F2FS_STAT(sbi);
+	struct f2fs_super_block *raw_super = F2FS_RAW_SUPER(sbi);
 	int i;
+
+	/* these will be changed if online resize is done */
+	si->main_area_segs = le32_to_cpu(raw_super->segment_count_main);
+	si->main_area_sections = le32_to_cpu(raw_super->section_count);
+	si->main_area_zones = si->main_area_sections /
+				le32_to_cpu(raw_super->secs_per_zone);
 
 	/* validation check of the segment numbers */
 	si->hit_largest = atomic64_read(&sbi->read_hit_largest);
@@ -282,7 +289,8 @@ static int stat_show(struct seq_file *s, void *v)
 		seq_printf(s, "\n=====[ partition info(%s). #%d, %s, CP: %s]=====\n",
 			bdevname(si->sbi->sb->s_bdev, devname), i++,
 			f2fs_readonly(si->sbi->sb) ? "RO": "RW",
-			f2fs_cp_error(si->sbi) ? "Error": "Good");
+			is_set_ckpt_flags(si->sbi, CP_DISABLED_FLAG) ?
+			"Disabled": (f2fs_cp_error(si->sbi) ? "Error": "Good"));
 		seq_printf(s, "[SB: 1] [CP: 2] [SIT: %d] [NAT: %d] ",
 			   si->sit_area_segs, si->nat_area_segs);
 		seq_printf(s, "[SSA: %d] [MAIN: %d",
@@ -516,7 +524,7 @@ void f2fs_destroy_stats(struct f2fs_sb_info *sbi)
 	list_del(&si->stat_list);
 	mutex_unlock(&f2fs_stat_mutex);
 
-	kfree(si);
+	kvfree(si);
 }
 
 void __init f2fs_create_root_stats(void)
