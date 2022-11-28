@@ -64,16 +64,9 @@ ifeq ($(CONFIG_SEC_J2Y18LTE_PROJECT),y)
         ifeq ($(CONFIG_MACH_J2Y18LTE_MEA_OPEN),y)
                 dtb-y += msm8917-sec-j2y18lte-mea-open-r00.dtb
                 dtb-y += msm8917-sec-j2y18lte-mea-open-r01.dtb
-                dtb-y += msm8917-sec-j2y18lte-mea-open-r02.dtb
-                dtb-y += msm8917-sec-j2y18lte-mea-open-r03.dtb
-                dtb-y += msm8917-sec-j2y18lte-mea-open-r04.dtb
-        endif
-        ifeq ($(CONFIG_MACH_J2Y18LTE_KOR_OPEN),y)
-                dtb-y += msm8917-sec-j2y18lte-kor-open-r00.dtb
-                dtb-y += msm8917-sec-j2y18lte-kor-open-r01.dtb
-                dtb-y += msm8917-sec-j2y18lte-kor-open-r02.dtb
-                dtb-y += msm8917-sec-j2y18lte-kor-open-r03.dtb
-                dtb-y += msm8917-sec-j2y18lte-kor-open-r04.dtb
+				dtb-y += msm8917-sec-j2y18lte-mea-open-r02.dtb
+				dtb-y += msm8917-sec-j2y18lte-mea-open-r03.dtb
+				dtb-y += msm8917-sec-j2y18lte-mea-open-r04.dtb
         endif
 endif
 
