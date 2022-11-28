@@ -6714,7 +6714,7 @@
 			qcom,max-hw-load = <0x56220>;
 			qcom,pm-qos-latency-us = <0x28b>;
 			qcom,firmware-name = "venus";
-			qcom,allowed-clock-rates = <0x15752a00 0x139e4720 0x12646790 0x1017df80 0xbebc200>;
+			qcom,allowed-clock-rates = <0x17d78400 0x139e4720 0x12646790 0x1017df80 0xbebc200>;
 
 			qcom,clock-freq-tbl {
 
