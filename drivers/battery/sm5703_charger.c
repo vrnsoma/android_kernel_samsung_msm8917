@@ -50,6 +50,8 @@
 #define ENABLE 1
 #define DISABLE 0
 
+#define CUSTOM_CURRENT 1500
+
 #if defined(CONFIG_MUIC_SLAVE_MODE_CONTROL_VBUS)
 extern int manual_control_vbus_sw(bool enable);
 #endif
@@ -474,13 +476,15 @@ static int sm5703_get_regulation_voltage(struct sm5703_charger_data *charger)
 	return (4120 + (data * 10));
 }
 #endif
-
 static void sm5703_set_fast_charging_current(struct sm5703_charger_data *charger,
 		int charging_current)
 {
 	int data = 0;
-
-	if(charging_current <= 100)
+#ifdef CUSTOM_CURRENT
+	pr_info("%s: Ignore: %d, override to %d", __func__, charging_current, CUSTOM_CURRENT);
+	charging_current = CUSTOM_CURRENT;
+#endif
+	if (charging_current <= 100)
 		charging_current = 100;
 	else if (charging_current >= 2500)
 		charging_current = 2500;
@@ -684,7 +688,6 @@ static bool sm5703_chg_init(struct sm5703_charger_data *charger)
 
 	sm5703_set_otgcurrent(charger, 1200); /* OTGCURRENT : 1.2A */
 
-#define CUSTOM_CURRENT 1500
 #ifdef CUSTOM_CURRENT
 	pr_info("%s: Current fast charge current: %d\n", __func__, sm5703_get_fast_charging_current(charger));
 	sm5703_set_fast_charging_current(charger, CUSTOM_CURRENT);
