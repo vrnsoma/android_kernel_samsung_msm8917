@@ -652,8 +652,8 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 
 #ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
 
-#define MIN_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MIN_TIME * 1000
-#define MAX_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MAX_TIME * 1000
+#define MIN_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MIN_TIME * 1000 * 1000
+#define MAX_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MAX_TIME * 1000 * 1000
 
 #ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_DEBUG
 #define dt2w_log(fmt) input_info(true, &data->client->dev, "[DT2W] " fmt)
@@ -664,11 +664,14 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 	current_time = ts.tv_nsec;
 	if (data->double_tap_to_wake) {
 		long diff;
+		bool ignore;
 
 		data->scrub_id = SPONGE_EVENT_TYPE_AOD_DOUBLETAB;
 		dt2w_log("Tab detected\n");
 		diff = current_time - before_time;
-		if (MIN_NANOSEC <= diff && diff <= MAX_NANOSEC) {
+		ignore = MIN_NANOSEC > diff || diff > MAX_NANOSEC;
+		dt2w_log("diff is %ld, %s", diff, ignore ? "Ignoring" : "");
+		if (!ignore) {
 			dt2w_log("Double tap detected\n");
 			input_report_key(data->input_dev, KEY_WAKEUP, 1);
 			input_sync(data->input_dev);
