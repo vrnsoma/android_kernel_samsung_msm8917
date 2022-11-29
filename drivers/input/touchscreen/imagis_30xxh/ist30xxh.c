@@ -656,7 +656,7 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 #define MAX_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MAX_TIME * 1000 * 1000
 
 #ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_DEBUG
-#define dt2w_log(fmt) input_info(true, &data->client->dev, "[DT2W] " fmt)
+#define dt2w_log(fmt, ...) input_info(true, &data->client->dev, "[DT2W] " fmt, ##__VA_ARGS__)
 #else
 #define dt2w_log(...)
 #endif
