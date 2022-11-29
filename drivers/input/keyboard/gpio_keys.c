@@ -604,6 +604,15 @@ static void gpio_keys_gpio_report_event(struct gpio_button_data *bdata)
 
 	input_err(true, global_dev, "%s: code=%d, value=%d state=%d\n",
 		__func__, button->code, button->value, state);
+
+#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
+	if (button->code == 172) {
+		input_report_key(global_dev, KEY_WAKEUP, 1);
+		input_sync(global_dev);
+		input_report_key(global_dev, KEY_WAKEUP, 0);
+		input_sync(global_dev);
+	}
+#endif
 	if (state)
 		bdata->key_press_count++;
 	pr_info("%s %s: %d, %d, %d\n", SECLOG, __func__, button->code, button->value, state);
