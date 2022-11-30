@@ -650,39 +650,6 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
         }
         input_mt_report_slot_state(data->input_dev, MT_TOOL_FINGER, press);
 
-#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
-
-#define MIN_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MIN_TIME * 1000 * 1000
-#define MAX_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MAX_TIME * 1000 * 1000
-
-#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_DEBUG
-#define dt2w_log(fmt, ...) input_info(true, &data->client->dev, "[DT2W] " fmt, ##__VA_ARGS__)
-#else
-#define dt2w_log(...)
-#endif
-	getnstimeofday(&ts);
-	current_time = ts.tv_nsec;
-	if (data->double_tap_to_wake) {
-		long diff;
-		bool ignore;
-
-		data->scrub_id = SPONGE_EVENT_TYPE_AOD_DOUBLETAB;
-		dt2w_log("Tab detected\n");
-		diff = current_time - before_time;
-		ignore = MIN_NANOSEC > diff || diff > MAX_NANOSEC;
-		dt2w_log("diff is %ld, %s", diff, ignore ? "Ignoring" : "");
-		if (!ignore) {
-			dt2w_log("Double tap detected\n");
-			input_report_key(data->input_dev, KEY_WAKEUP, 1);
-			input_sync(data->input_dev);
-			input_report_key(data->input_dev, KEY_WAKEUP, 0);
-			input_sync(data->input_dev);
-			dt2w_log("Reported KEY_WAKEUP\n");
-		}		
-	}
-	before_time = current_time;
-#endif /* CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT */
-
 	print_tsp_event(data, id, &fingers[idx]);
 
         if (press == false)
@@ -708,7 +675,40 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
         }
         idx++;
     }
+#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT
 
+#define MIN_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MIN_TIME * 1000 * 1000
+#define MAX_NANOSEC CONFIG_TOUCHSCREEN_IST30XXH_DT2W_MAX_TIME * 1000 * 1000
+
+#ifdef CONFIG_TOUCHSCREEN_IST30XXH_DT2W_DEBUG
+#define dt2w_log(fmt, ...) input_info(true, &data->client->dev, "[DT2W] " fmt, ##__VA_ARGS__)
+#else
+#define dt2w_log(...)
+#endif
+	if (finger_counts == 1) {
+		getnstimeofday(&ts);
+		current_time = ts.tv_nsec;
+		if (data->double_tap_to_wake) {
+			long diff;
+			bool ignore;
+
+			data->scrub_id = SPONGE_EVENT_TYPE_AOD_DOUBLETAB;
+			dt2w_log("Tab detected\n");
+			diff = current_time - before_time;
+			ignore = MIN_NANOSEC > diff || diff > MAX_NANOSEC;
+			dt2w_log("diff is %ld, %s", diff, ignore ? "Ignoring" : "");
+			if (!ignore) {
+				dt2w_log("Double tap detected\n");
+				input_report_key(data->input_dev, KEY_WAKEUP, 1);
+				input_sync(data->input_dev);
+				input_report_key(data->input_dev, KEY_WAKEUP, 0);
+				input_sync(data->input_dev);
+				dt2w_log("Reported KEY_WAKEUP\n");
+			}
+		}
+		before_time = current_time;
+	}
+#endif /* CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT */
 #ifdef IST30XX_USE_KEY
     status = PARSE_KEY_STATUS(data->t_status);
     for (id = 0; id < ARRAY_SIZE(ist30xx_key_code); id++) {
