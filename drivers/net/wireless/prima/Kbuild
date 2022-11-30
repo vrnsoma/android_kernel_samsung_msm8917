@@ -10,10 +10,10 @@ ifeq ($(KERNEL_BUILD),1)
 	# These are provided in Android-based builds
 	# Need to explicitly define for Kernel-based builds
 	MODNAME := wlan
-	WLAN_ROOT := drivers/staging/prima
+	WLAN_ROOT := drivers/net/wireless/prima
 endif
 
-ifeq ($(KERNEL_BUILD), 0)
+#ifeq ($(KERNEL_BUILD), 0)
 # These are configurable via Kconfig for kernel-based builds
 # Need to explicitly configure for Android-based builds
 
@@ -61,7 +61,7 @@ ifneq ($(CONFIG_PRONTO_WLAN),)
 #Flag to enable offload packets feature
     CONFIG_WLAN_OFFLOAD_PACKETS := y
 
-    endif
+    #endif
 #Flag to enable AP Find feature
 CONFIG_WLAN_FEATURE_AP_FIND := y
 
@@ -86,6 +86,8 @@ PANIC_ON_BUG := 1
 
 #Re-enable wifi on WDI timeout
 RE_ENABLE_WIFI_ON_WDI_TIMEOUT := 0
+
+CONFIG_CFG80211 := y
 
 ifeq ($(CONFIG_CFG80211),y)
 HAVE_CFG80211 := 1
@@ -677,10 +679,10 @@ endif
 endif
 
 #normally, TDLS negative behavior is not needed
-ifeq ($(CONFIG_QCOM_TDLS),y)
+#ifeq ($(CONFIG_QCOM_TDLS),y)
 CDEFINES += -DFEATURE_WLAN_TDLS
 CDEFINES += -DCONFIG_TDLS_IMPLICIT
-endif
+#endif
 
 ifeq ($(CONFIG_PRIMA_WLAN_BTAMP),y)
 CDEFINES += -DWLAN_BTAMP_FEATURE
@@ -690,9 +692,9 @@ ifeq ($(CONFIG_PRIMA_WLAN_LFR),y)
 CDEFINES += -DFEATURE_WLAN_LFR
 endif
 
-ifeq ($(CONFIG_WLAN_FEATURE_SAE),y)
+#ifeq ($(CONFIG_WLAN_FEATURE_SAE),y)
 CDEFINES += -DWLAN_FEATURE_SAE
-endif
+#endif
 
 ifeq ($(CONFIG_WLAN_FEATURE_SW_PTA),y)
 CDEFINES += -DFEATURE_WLAN_SW_PTA
