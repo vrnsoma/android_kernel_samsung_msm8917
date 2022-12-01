@@ -607,10 +607,10 @@ static void gpio_keys_gpio_report_event(struct gpio_button_data *bdata)
 
 #ifdef CONFIG_SEC_J2Y18LTE_PROJECT
 	if (button->code == 172) {
-		input_report_key(global_dev, KEY_WAKEUP, 1);
-		input_sync(global_dev);
-		input_report_key(global_dev, KEY_WAKEUP, 0);
-		input_sync(global_dev);
+		input_report_key(input, KEY_WAKEUP, 1);
+		input_sync(input);
+		input_report_key(input, KEY_WAKEUP, 0);
+		input_sync(input);
 	}
 #endif
 	if (state)
