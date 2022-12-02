@@ -692,7 +692,7 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 			pressed++;
 	}
 	dt2w_log("pressed: %d last_pressed: %d", pressed, last_pressed);
-	if (pressed == 1 && last_pressed == 0) {
+	if (pressed == 0 && last_pressed == 1) {
 		getnstimeofday(&ts);
 		current_time = ts.tv_nsec;
 		if (data->double_tap_to_wake) {
