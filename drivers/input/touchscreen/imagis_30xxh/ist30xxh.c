@@ -636,7 +636,7 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
     static long current_time, before_time;
     struct timespec ts;
     static int last_pressed = 0;
-    int pressed = 0, i;
+    int pressed = 0;
 #endif /* CONFIG_TOUCHSCREEN_IST30XXH_DT2W_SUPPORT */
 
     memset(data->t_frame, 0, sizeof(data->t_frame));
@@ -687,12 +687,9 @@ static void report_input_data(struct ist30xx_data *data, int finger_counts,
 #else
 #define dt2w_log(...)
 #endif
-	for (i = 0; i < IST30XX_MAX_FINGERS; i++) {
-		if (data->tsp_touched[i])
-			pressed++;
-	}
+	pressed = data->all_finger_count;
 	dt2w_log("pressed: %d last_pressed: %d", pressed, last_pressed);
-	if (pressed == 0 && last_pressed == 1) {
+	if (pressed & last_pressed == 0 && pressed | last_pressed == 1) {
 		getnstimeofday(&ts);
 		current_time = ts.tv_nsec;
 		if (data->double_tap_to_wake) {
