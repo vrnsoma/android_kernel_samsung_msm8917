@@ -3306,6 +3306,7 @@
 				status = "ok";
 				clocks = <0x10 0x266b3853 0x10 0x80902deb>;
 				clock-names = "cam_src_clk", "cam_clk";
+				qcom,clock-rates = <0x16e3600 0x0>;
 			};
 
 			qcom,camera@1 {
@@ -3339,6 +3340,7 @@
 				status = "ok";
 				clocks = <0x10 0xa73cad0c 0x10 0x5002d85f>;
 				clock-names = "cam_src_clk", "cam_clk";
+				qcom,clock-rates = <0x16e3600 0x0>;
 			};
 		};
 
