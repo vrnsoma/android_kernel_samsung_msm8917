@@ -38,6 +38,10 @@
 #include <linux/qpnp/power-on.h>
 #endif
 
+#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
+#include <linux/fb.h>
+#endif
+
 struct device *sec_key;
 EXPORT_SYMBOL(sec_key);
 
@@ -49,6 +53,9 @@ extern struct class *sec_class;
 
 static int wakeup_reason;
 static bool key_wakeup;
+#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
+static bool fb_sleeping = false;
+#endif
 bool wakeup_by_key(void)
 {
 	if (key_wakeup)
@@ -598,21 +605,19 @@ static void gpio_keys_gpio_report_event(struct gpio_button_data *bdata)
 		if (state)
 			input_event(input, type, button->code, button->value);
 	} else {
+#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
+		int report_key = button->code;
+		if (fb_sleeping && button->code == KEY_HOMEPAGE) report_key = KEY_WAKEUP;
+		input_event(input, type, report_key, !!state);
+#else
 		input_event(input, type, button->code, !!state);
+#endif
 	}
 	input_sync(input);
 
 	input_err(true, global_dev, "%s: code=%d, value=%d state=%d\n",
 		__func__, button->code, button->value, state);
 
-#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
-	if (button->code == 172) {
-		input_report_key(input, KEY_WAKEUP, 1);
-		input_sync(input);
-		input_report_key(input, KEY_WAKEUP, 0);
-		input_sync(input);
-	}
-#endif
 	if (state)
 		bdata->key_press_count++;
 	pr_info("%s %s: %d, %d, %d\n", SECLOG, __func__, button->code, button->value, state);
@@ -1002,6 +1007,25 @@ gpio_keys_get_devtree_pdata(struct device *dev)
 }
 
 #endif
+#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
+static int gpio_fb_notifier(struct notifier_block *self, unsigned long event, void *data) {
+	struct fb_event *evdata = (struct fb_event *)data;
+	if ((event == FB_EVENT_BLANK) && evdata && evdata->data) {
+		int blank = *(int *)evdata->data;
+		if (blank == FB_BLANK_POWERDOWN) {
+			fb_sleeping = true;
+		} else if (blank == FB_BLANK_UNBLANK) {
+			fb_sleeping = false;
+		}
+		return NOTIFY_OK;
+	}
+	return NOTIFY_DONE;
+}
+static struct notifier_block gpio_fb_notifier_block = {
+	.notifier_call = gpio_fb_notifier,
+	.priority = -1,
+};
+#endif
 static int gpio_keys_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -1130,7 +1154,9 @@ static int gpio_keys_probe(struct platform_device *pdev)
 		gpio_keys_syscore_pm_ops.resume = gpio_keys_syscore_resume;
 
 	register_syscore_ops(&gpio_keys_syscore_pm_ops);
-
+#ifdef CONFIG_SEC_J2Y18LTE_PROJECT
+	fb_register_client(&gpio_fb_notifier_block);
+#endif
 	return 0;
 
 err_remove_group:
