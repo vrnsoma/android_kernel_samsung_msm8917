@@ -2325,11 +2325,12 @@ static int eeprom_config_read_cal_data(struct msm_eeprom_ctrl_t *e_ctrl,
 					struct msm_eeprom_cfg_data *cdata)
 {
 	int rc;
+	pr_err("%s: exp %u, req %u, addr %x\n", __func__, e_ctrl->cal_data.num_data,
+			cdata->cfg.read_data.num_bytes, cdata->cfg.read_data.addr);
 	/* check range */
 	if ((cdata->cfg.read_data.num_bytes > e_ctrl->cal_data.num_data)||
 		(cdata->cfg.read_data.addr > e_ctrl->cal_data.num_data)){
-		pr_err("%s: Invalid size or addr. exp %u, req %u, addr %x\n", __func__,
-			e_ctrl->cal_data.num_data, cdata->cfg.read_data.num_bytes, cdata->cfg.read_data.addr);
+		pr_err("%s: Invalid size or addr\n", __func__);
 		return -EINVAL;
 	}
 	if (!e_ctrl->cal_data.mapdata) {
