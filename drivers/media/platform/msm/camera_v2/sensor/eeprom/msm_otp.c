@@ -3645,9 +3645,9 @@ static int msm_eeprom_i2c_probe(struct i2c_client *client,
 		pr_err("%s read_eeprom_memory failed\n", __func__);
 		goto power_down;
 	}
-	for (i = 0; i < e_ctrl->cal_data.num_data; i++) {
-		CDBG("memory_data[0x%02X] = 0x%02X\n", i, e_ctrl->cal_data.mapdata[i]);
-	}
+//	for (i = 0; i < e_ctrl->cal_data.num_data; i++) {
+//		CDBG("memory_data[0x%02X] = 0x%02X\n", i, e_ctrl->cal_data.mapdata[i]);
+//	}
 
 	e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
 
@@ -4454,9 +4454,9 @@ RETRY:
 				goto RETRY;
 			}
 		}
-		for (i = 0; i < e_ctrl->cal_data.num_data; i++) {
-			CDBG("memory_data[%d] = 0x%X\n", i, e_ctrl->cal_data.mapdata[i]);
-		}
+//		for (i = 0; i < e_ctrl->cal_data.num_data; i++) {
+//			CDBG("memory_data[%d] = 0x%X\n", i, e_ctrl->cal_data.mapdata[i]);
+//		}
 
 
 		e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
