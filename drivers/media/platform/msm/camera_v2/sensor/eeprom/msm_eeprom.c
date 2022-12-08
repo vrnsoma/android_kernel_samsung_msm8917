@@ -1151,7 +1151,7 @@ static struct v4l2_subdev_ops msm_eeprom_subdev_ops = {
 static struct msm_cam_clk_info cam_8960_clk_info[] = {
 	[SENSOR_CAM_MCLK] = {"cam_clk", 24000000},
 };
-
+static int msm_eeprom_cmm_dts(struct msm_eeprom_board_info *eb_info, struct device_node *of_node);
 static int msm_eeprom_i2c_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
@@ -1240,11 +1240,9 @@ static int msm_eeprom_i2c_probe(struct i2c_client *client,
 	power_info->clk_info_size = ARRAY_SIZE(cam_8960_clk_info);
 	power_info->dev = &client->dev;
 
-#if 0  //remove eebin
 	rc = msm_eeprom_cmm_dts(e_ctrl->eboard_info, of_node);
 	if (rc < 0)
 		CDBG("%s MM data miss:%d\n", __func__, __LINE__);
-#endif
 
 	rc = msm_eeprom_get_dt_data(e_ctrl);
 	if (rc)
@@ -1755,8 +1753,6 @@ ERROR1:
 	return rc;
 }
 
-
-#if 0 // remove eebin. This is not used.
 static int msm_eeprom_cmm_dts(struct msm_eeprom_board_info *eb_info,
 	struct device_node *of_node)
 {
@@ -1788,7 +1784,6 @@ static int msm_eeprom_cmm_dts(struct msm_eeprom_board_info *eb_info,
 		cmm_data->cmm_size);
 	return 0;
 }
-#endif
 
 static int msm_eeprom_spi_setup(struct spi_device *spi)
 {
@@ -1848,11 +1843,10 @@ static int msm_eeprom_spi_setup(struct spi_device *spi)
 	client->i2c_func_tbl = &msm_eeprom_spi_func_tbl;
 	client->addr_type = MSM_CAMERA_I2C_3B_ADDR;
 
-#if 0  //remove eebin
 	rc = msm_eeprom_cmm_dts(e_ctrl->eboard_info, spi->dev.of_node);
 	if (rc < 0)
 		CDBG("%s MM data miss:%d\n", __func__, __LINE__);
-#endif
+
 	power_info = &eb_info->power_info;
 	power_info->dev = &spi->dev;
 
