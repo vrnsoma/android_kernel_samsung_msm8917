@@ -27,8 +27,6 @@
 #include "s5k5e3yx_otp.h"
 #endif
 
-#define MSM_EEPROM_DEBUG 1
-
 #undef CDBG
 #ifdef MSM_EEPROM_DEBUG
 #define CDBG(fmt, args...) pr_err(fmt, ##args)
@@ -3395,16 +3393,6 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 	memcpy(front_sensor_id, memptr + S5K5E9_OTP_SENSOR_ID_OFFSET, S5K5E9_OTP_SENSOR_ID_SIZE);
 	front_sensor_id[S5K5E9_OTP_SENSOR_ID_SIZE] = '\0';
 #endif
-#endif
-
-#ifdef MSM_EEPROM_DEBUG
-	memptr = block->mapdata;
-	for(i=0; i < block->num_data; i+=16)
-	{
-		pr_err("memptr[%03X]: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n", i,
-			memptr[i],memptr[i+1],memptr[i+2],memptr[i+3],memptr[i+4],memptr[i+5],memptr[i+6],memptr[i+7],
-			memptr[i+8],memptr[i+9],memptr[i+10],memptr[i+11],memptr[i+12],memptr[i+13],memptr[i+14],memptr[i+15]);
-	}
 #endif
 	return rc;
 }
